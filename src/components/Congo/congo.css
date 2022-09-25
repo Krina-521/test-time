@@ -1,0 +1,43 @@
+.congo-container {
+  display: flex;
+  flex-direction: column;
+  justify-self: center;
+  align-self: center;
+  justify-content: center;
+  align-content: center;
+  height: 100%;
+  max-height: 100vh;
+  padding: 3rem auto;
+}
+
+.congo-heading {
+  font-size: 30px;
+  color: var(--black-color);
+  margin: 0 auto 2rem;
+}
+
+.scores {
+  font-size: 24px;
+  margin-bottom: 3em;
+  color: var(--black-color);
+}
+
+.retry-button {
+  display: flex;
+  border: 1px solid var(--yellow-color);
+  border-radius: 20px;
+  padding: 15px 30px;
+  text-decoration: none;
+  color: var(--black-color);
+  background-color: var(--yellow-color);
+  transition: 0.3s;
+  font-size: 1em;
+  cursor: pointer;
+  outline: none;
+  margin: 0 auto 2rem;
+  width: fit-content;
+}
+.retry-button:hover {
+  color: var(--yellow-color);
+  background-color: var(--black-color);
+}
