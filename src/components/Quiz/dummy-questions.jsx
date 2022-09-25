@@ -4,82 +4,33 @@ import axios from "axios";
 import Congo from "../Congo/Congo";
 import Footer from "../Footer/Footer.jsx";
 
-const TOTAL_QUESTION_NUMBER = 10;
+const TOTAL_QUESTION_NUMBER = 5;
 const API_KEY = "BsIQHZ4svgivJlZHFOMW77BJXM6DB0yW6fC4yHWE";
 
 const Quiz = () => {
   const [quiz, setQuiz] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [savedAnswers, setSavedAnswers] = useState(
-    Array(TOTAL_QUESTION_NUMBER).fill([])
+  const [savedAnswers, updateSavedAnswers] = useState(
+    Array(TOTAL_QUESTION_NUMBER).fill("")
   );
-  const [currentlySelectedOption, setCurrentlySelectedOption] = useState([]);
+  const [currentlySelectedOption, setCurrentlySelectedOption] = useState("");
   const [totalPoints, setTotalPoints] = useState(0);
 
-  const removeValueFromArray = (arr, value) => {
-    return arr.filter((item) => {
-      return item !== value;
-    });
+  const pickAnswer = (e) => {
+    // Add logic to so selected option using css
+    // add logic for multiple choice
+    unfocusOptionsAll();
+    focusOptionById(e.target.id);
+    setCurrentlySelectedOption(e.target.outerText);
   };
 
-  const toggleOptionFocusById = (e) => {
-    const optionId = e.target.id;
-    const optionButton = document.getElementById(optionId);
-    let newOptionList = [...currentlySelectedOption];
-
-    if (!optionButton.classList.contains("focused-button")) {
-      newOptionList.push(optionButton.innerText);
-      optionButton.classList.add("focused-button");
-    } else {
-      newOptionList = removeValueFromArray(
-        currentlySelectedOption,
-        optionButton.innerText
-      );
-      optionButton.classList.remove("focused-button");
-    }
-    setCurrentlySelectedOption([...newOptionList]);
-  };
-
-  const focusOptionById = (optionId, newOptionList) => {
-    const optionButton = document.getElementById(optionId);
-
-    if (!optionButton.classList.contains("focused-button")) {
-      newOptionList.push(optionButton.innerText);
-      optionButton.classList.add("focused-button");
-    }
-  };
-
-  const unfocusOptionById = (optionId) => {
-    const optionButton = document.getElementById(optionId);
-
-    if (optionButton.classList.contains("focused-button")) {
-      optionButton.classList.remove("focused-button");
-    }
-  };
-
-  const areArraysEqual = (arrayToCheck, answersList) => {
-    if (arrayToCheck.length !== answersList.length) {
-      return false;
-    }
-
-    for (let answerToCheck of arrayToCheck) {
-      if (!answersList.includes(answerToCheck)) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const isAnswerCorrect = (answersListToCheck) => {
-    return areArraysEqual(
-      answersListToCheck,
-      quiz[questionIndex].correctAnswers
-    );
+  const isAnswerCorrect = (answerToCheck) => {
+    return !quiz[questionIndex].correctAnswers.includes(answerToCheck);
   };
 
   const evaluatePoints = () => {
     if (
-      savedAnswers[questionIndex].length &&
+      savedAnswers[questionIndex] &&
       isAnswerCorrect(savedAnswers[questionIndex])
     ) {
       setTotalPoints(totalPoints - 1);
@@ -90,27 +41,47 @@ const Quiz = () => {
 
   const saveAnswerIfSelected = () => {
     if (
-      currentlySelectedOption.length &&
-      !areArraysEqual(currentlySelectedOption, savedAnswers[questionIndex])
+      currentlySelectedOption &&
+      currentlySelectedOption !== savedAnswers[questionIndex]
     ) {
       evaluatePoints();
       const answers = [...savedAnswers];
-      answers[questionIndex] = [...currentlySelectedOption];
-      setSavedAnswers(answers);
+      answers[questionIndex] = currentlySelectedOption;
+      updateSavedAnswers(answers);
     }
   };
 
-  const focusAlreadySelectedOptions = () => {
-    const newOptionList = [];
+  const focusOptionById = (optionId) => {
+    const optionButton = document.getElementById(optionId);
+
+    if (!optionButton.classList.contains("focused-button")) {
+      optionButton.classList.add("focused-button");
+    }
+    setCurrentlySelectedOption(optionButton.value);
+  };
+
+  const unfocusOptionsAll = () => {
     quiz[questionIndex].options.map((option, index) => {
       const optionId = "option-" + index;
-      if (savedAnswers[questionIndex].includes(option))
-        focusOptionById(optionId, newOptionList);
-      else {
+      unfocusOptionById(optionId);
+    });
+  };
+
+  const unfocusOptionById = (optionId) => {
+    const optionButton = document.getElementById(optionId);
+    if (optionButton.classList.contains("focused-button"))
+      optionButton.classList.remove("focused-button");
+  };
+
+  const focusAlreadySelectedOptions = () => {
+    quiz[questionIndex].options.map((option, index) => {
+      const optionId = "option-" + index;
+      if (savedAnswers[questionIndex] === option) {
+        focusOptionById(optionId);
+      } else {
         unfocusOptionById(optionId);
       }
     });
-    setCurrentlySelectedOption(newOptionList);
   };
 
   const saveAnswersAndLoadNewQuestion = (newIndex) => {
@@ -194,7 +165,7 @@ const Quiz = () => {
                 className="option-button"
                 key={index}
                 id={"option-" + index}
-                onClick={toggleOptionFocusById}
+                onClick={pickAnswer}
               >
                 {" " + item + " "}
               </button>
@@ -215,3 +186,54 @@ const Quiz = () => {
 };
 
 export default Quiz;
+
+/*
+
+A. Disable clicked option (should not call setOptionSelected once it is selected to avoid redundant calls)
+DONE ---> B. Disable Prev and Next btn on page start and end respectively
+DONE ---> C. Hide footer at end page
+
+D. Create savedAnswer list to store final answer of the questions
+E. <=== when prev / next button clicked ====>
+
+    if optionSelected !== savedAnswer[questionNumber] 
+        if savedAnswer[questionNumber]
+            if isAnswerCorrect(savedAnswer[questionNumber])
+                setPts(pts-1)
+            else if isAnswerCorrect(optionSelected)
+                setPts(pts+1)
+        else if isAnswerCorrect(optionSelected)
+            setPts(pts+1)
+        
+        saveAnswer[questionNumber]=optionSelected
+
+1 <=(option clicked)=> optionSelected  <=(next button clicked)=> answerSaved => nextQues
+2 <=(option clicked)=> optionSelected <=(previous button clicked)=> answerSaved => previousQues
+1 <=(option clicked)=> optionSelected {changed Option} <=(next button clicked)=> save New Ans => nextQues
+2 <=(prev button clicked, no new option not clicked)=> keep ans (not updating answer) => prev
+1 
+
+SA -> OS, Other than OS
+OS -> CA, WA
+
+CA -> C
+SA -> C
+OS -> A
+
+
+SA = ['A', 'B', 'B', '', '']
+res.data.map((item) => ({
+            question: item.question,
+            options: shuffle([...item.answers]),
+            answer: item.correct_answers("true"),
+          }))
+
+
+Done---> Selected button color???????
+done--scorable options ???????/
+done--Assessment title ??????
+done--Footer fixed
+Disable clicked option (should not call setOptionSelected once it is selected to avoid redundant calls)
+
+
+*/
